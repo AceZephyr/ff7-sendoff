@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FF7 PSX Sendoff</title>
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<input type="text" id="input" style="width: 300px" oninput="update()">
+<input type="number" name="stone" id="stone" oninput="updateStone()">
+<input type="checkbox" name="left_wildcard" id="left_wildcard" onchange="update()"><label for="left_wildcard">Left
+    Wildcard</label>
+<input type="checkbox" name="right_wildcard" id="right_wildcard" onchange="update()"><label for="right_wildcard">Right
+    Wildcard</label>
+<button onclick="update()">Force Update</button>
+<div id="output"></div>
+<script src="sendoff-data.js"></script>
+<script>
+
+    function pct(val) {
+        return (val * 100).toFixed(1) + "%";
+    }
+    function init() {
+        let stoneRanks = {}
+        for (let i = 0; i < 16; i++)
+            stoneRanks[16 * i + 1] = 0;
+        let str = "";
+        for (let i = 0; i < DATA.length; i++) {
+            let stoneRank = ++stoneRanks[DATA[i][1]]
+            str +=
+                `<div class="hidden">
+                    <p>${DATA[i][0]}</p>
+                    <p>Stone ${DATA[i][1]}, List ${DATA[i][2]} | ${DATA[i][4]} Moves (${DATA[i][3]} Points)</p>
+                    <p>${DATA[i][5]} Frames: Rank ${i + 1} (${pct((i + 1)/4096)}), Stone Rank ${stoneRank} (${pct(stoneRank/256)})</p>
+                    <div class="hidden">${DATA[i][1]}</div>
+                </div>`;
+        }
+        document.getElementById("output").innerHTML = str;
+    }
+
+    function updateStone() {
+        const stone = parseInt(document.getElementById("stone").value);
+        if (isNaN(stone) || [1,17,33,49,65,81,97,113,129,145,161,177,193,209,225,241].includes(stone))
+            update();
+    }
+
+    function update() {
+        const inp = document.getElementById("input").value.toUpperCase();
+
+        if (!inp.match(/^[LRCXTS]*$/)) {
+            return;
+        }
+
+        const leftWildcard = document.getElementById("left_wildcard").checked;
+        const rightWildcard = document.getElementById("right_wildcard").checked;
+
+        let stone = parseInt(document.getElementById("stone").value);
+
+        if (isNaN(stone) || ![1,17,33,49,65,81,97,113,129,145,161,177,193,209,225,241].includes(stone))
+            stone = -1;
+
+        const regex = "^" + (leftWildcard ? ".*" : "") + inp + (rightWildcard ? ".*" : "") + "$";
+
+        Array.from(document.getElementById("output").children).forEach(e => {
+            if (!(stone === -1 || parseInt(e.children[3].innerText) === stone) || !e.children[0].innerText.match(regex))
+                e.classList.add("hidden");
+            else
+                e.classList.remove("hidden");
+        });
+    }
+
+    init();
+    update();
+</script>
+</body>
+</html>
